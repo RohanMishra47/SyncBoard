@@ -1,0 +1,77 @@
+# ======================================
+# 🔧 Core / pnpm
+# ======================================
+**/node_modules/
+.pnpm-store/
+**/.pnpm-debug.log
+*.log
+logs/
+.cache/
+pnpm-lock.yaml
+
+# ======================================
+# ⚙️ TypeScript
+# ======================================
+**/*.tsbuildinfo
+**/dist/
+**/build/
+**/out/
+
+# ======================================
+# ⚡ Next.js (frontend)
+**/.next/
+**/.next.cache/
+**/.vercel/
+**/.turbo/
+**/out/
+
+# ======================================
+# 🚀 Express + Prisma (server)
+**/logs/
+**/prisma/generated/
+**/prisma/dev.db
+**/prisma/.env
+**/prisma/migrations/*/README.md
+**/src/generated
+
+# ======================================
+# 🔒 Environment Variables
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+.env*.local
+.env.local
+**/.env*.local
+
+# ======================================
+# 🧪 Tests
+**/coverage/
+**/jest-cache/
+**/jest-results.json
+**/*.spec.ts
+**/*.test.ts
+
+# ======================================
+# 🧩 Linting / Build Tools
+**/.eslintcache
+**/.stylelintcache
+**/.prettier-cache
+
+# ======================================
+# 🧠 Editor / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ======================================
+# 🪣 Miscellaneous
+*.local
+*.temp
+*.tmp
+scripts/generated/
