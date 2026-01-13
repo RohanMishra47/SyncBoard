@@ -33,6 +33,7 @@ pnpm-lock.yaml
 **/prisma/.env
 **/prisma/migrations/*/README.md
 **/src/generated
+server/generated/
 
 # ======================================
 # 🔒 Environment Variables
