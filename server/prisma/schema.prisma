@@ -12,3 +12,21 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  rooms     Room[]
+}
+
+model Room {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique // URL-friendly identifier (e.g., "design-meeting-2024")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdById String
+  canvasData  Json?    // Stores the drawing actions as JSON
+}
