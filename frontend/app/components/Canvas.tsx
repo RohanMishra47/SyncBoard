@@ -1,10 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Socket } from "socket.io-client";
 import { useCanvasStore } from "../stores/canvasStore";
 import { DrawAction } from "../types";
 
-export default function Canvas() {
+interface CanvasProps {
+  socket: Socket | null;
+  roomId: string;
+}
+
+export default function Canvas({ socket, roomId }: CanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentPath, setCurrentPath] = useState<[number, number][]>([]);
@@ -84,7 +90,13 @@ export default function Canvas() {
       points: currentPath,
     };
 
+    // Add to local state
     addAction(action);
+
+    // Emit to other users via socket
+    if (socket && roomId) {
+      socket.emit("draw:action", { roomId, action });
+    }
     setIsDrawing(false);
     setCurrentPath([]);
   };
