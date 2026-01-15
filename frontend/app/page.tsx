@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import Canvas from "./components/Canvas";
 import JoinScreen from "./components/JoinScreen";
 import Toolbar from "./components/Toolbar";
-import { User } from "./types";
+import { useUserStore } from "./stores/userStore";
 
 export default function Home() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, setUser } = useUserStore();
 
   if (!user) {
     return <JoinScreen onJoin={setUser} />;

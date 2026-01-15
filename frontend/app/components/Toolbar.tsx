@@ -4,15 +4,13 @@ import { Eraser, Pencil, Trash2 } from "lucide-react";
 import { useCanvasStore } from "../stores/canvasStore";
 
 export default function Toolbar() {
-  const {
-    tool,
-    color,
-    brushSize,
-    setTool,
-    setColor,
-    setBrushSize,
-    clearCanvas,
-  } = useCanvasStore();
+  const tool = useCanvasStore((state) => state.tool);
+  const color = useCanvasStore((state) => state.color);
+  const brushSize = useCanvasStore((state) => state.brushSize);
+  const setTool = useCanvasStore((state) => state.setTool);
+  const setColor = useCanvasStore((state) => state.setColor);
+  const setBrushSize = useCanvasStore((state) => state.setBrushSize);
+  const clearCanvas = useCanvasStore((state) => state.clearCanvas);
 
   return (
     <div className="bg-white border-b border-gray-200 p-4">
