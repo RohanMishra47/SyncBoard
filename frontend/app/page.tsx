@@ -1,23 +1,18 @@
 "use client";
 
-import Canvas from "./components/Canvas";
 import JoinScreen from "./components/JoinScreen";
-import Toolbar from "./components/Toolbar";
+import Room from "./components/Room";
 import { useUserStore } from "./stores/userStore";
 
 export default function Home() {
-  const { user, setUser } = useUserStore();
+  const user = useUserStore((state) => state.user);
+
+  // Using a default room ID for now but add proper room creation/joining later
+  const defaultRoomId = "default-room";
 
   if (!user) {
-    return <JoinScreen onJoin={setUser} />;
+    return <JoinScreen onJoin={useUserStore.getState().setUser} />;
   }
 
-  return (
-    <div className="h-screen flex flex-col">
-      <Toolbar />
-      <div className="flex-1 overflow-hidden">
-        <Canvas />
-      </div>
-    </div>
-  );
+  return <Room roomId={defaultRoomId} />;
 }
