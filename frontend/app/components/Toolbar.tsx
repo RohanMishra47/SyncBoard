@@ -1,12 +1,13 @@
 "use client";
 
-import { Eraser, Pencil, Trash2 } from "lucide-react";
+import { Eraser, Pencil, Trash2, Wifi, WifiOff } from "lucide-react";
 import { useCanvasStore } from "../stores/canvasStore";
 
 export default function Toolbar() {
   const tool = useCanvasStore((state) => state.tool);
   const color = useCanvasStore((state) => state.color);
   const brushSize = useCanvasStore((state) => state.brushSize);
+  const isConnected = useCanvasStore((state) => state.isConnected);
   const setTool = useCanvasStore((state) => state.setTool);
   const setColor = useCanvasStore((state) => state.setColor);
   const setBrushSize = useCanvasStore((state) => state.setBrushSize);
@@ -15,6 +16,21 @@ export default function Toolbar() {
   return (
     <div className="bg-white border-b border-gray-200 p-4">
       <div className="max-w-7xl mx-auto flex items-center gap-6">
+        {/* Connection Status */}
+        <div className="flex items-center gap-2">
+          {isConnected ? (
+            <>
+              <Wifi size={20} className="text-green-500" />
+              <span className="text-sm text-green-600">Connected</span>
+            </>
+          ) : (
+            <>
+              <WifiOff size={20} className="text-red-500" />
+              <span className="text-sm text-red-600">Disconnected</span>
+            </>
+          )}
+        </div>
+
         {/* Tool Selection */}
         <div className="flex gap-2">
           <button
@@ -42,7 +58,7 @@ export default function Toolbar() {
           </button>
         </div>
 
-        {/* Color Picker (only show when pen is selected) */}
+        {/* Color Picker */}
         {tool === "pen" && (
           <div className="flex items-center gap-2">
             <label htmlFor="color-picker" className="text-sm text-gray-600">
