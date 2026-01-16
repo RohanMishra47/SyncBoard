@@ -13,58 +13,69 @@ interface RoomProps {
 }
 
 export default function Room({ roomId }: RoomProps) {
-  const socket = useSocket();
+  const { socket, isConnected } = useSocket();
   const user = useUserStore((state) => state.user);
   const addRemoteAction = useCanvasStore((state) => state.addRemoteAction);
   const setIsConnected = useCanvasStore((state) => state.setIsConnected);
   const hasJoinedRoom = useRef(false);
 
+  // Update store connection status
   useEffect(() => {
-    if (!socket || !user || hasJoinedRoom.current) return;
+    setIsConnected(isConnected);
+  }, [isConnected, setIsConnected]); // This isConnected comes from useSocket
 
-    // Join the room
-    socket.emit("join:room", { roomId, user });
-    hasJoinedRoom.current = true;
+  useEffect(() => {
+    if (!socket || !user) return;
 
-    // Listen for connection status
-    const handleConnect = () => {
-      setIsConnected(true);
-    };
+    // Only join room once when socket is connected
+    if (socket.connected && !hasJoinedRoom.current) {
+      console.log(`🚪 Joining room ${roomId} as ${user.name}`);
+      socket.emit("join:room", { roomId, user });
+      hasJoinedRoom.current = true;
+    }
 
-    const handleDisconnect = () => {
-      setIsConnected(false);
+    // If socket reconnects, rejoin the room
+    const handleReconnect = () => {
+      console.log("🔄 Reconnected, rejoining room");
+      hasJoinedRoom.current = false;
+      socket.emit("join:room", { roomId, user });
+      hasJoinedRoom.current = true;
     };
 
     // Listen for drawing actions from other users
     const handleDrawAction = (action: DrawAction) => {
-      console.log("Received remote action:", action);
+      console.log("📥 Received remote action:", action);
       addRemoteAction(action);
     };
 
     // Listen for user events
     const handleUserJoined = (newUser: User) => {
-      console.log("User joined:", newUser);
+      console.log("👋 User joined:", newUser.name);
     };
 
     const handleUserLeft = (leftUser: User) => {
-      console.log("User left:", leftUser);
+      console.log("👋 User left:", leftUser.name);
     };
 
-    socket.on("connect", handleConnect);
-    socket.on("disconnect", handleDisconnect);
+    const handleRoomUsers = (users: User[]) => {
+      console.log("👥 Room users:", users.map((u) => u.name).join(", "));
+    };
+
+    socket.on("connect", handleReconnect);
     socket.on("draw:action", handleDrawAction);
     socket.on("user:joined", handleUserJoined);
     socket.on("user:left", handleUserLeft);
+    socket.on("room:users", handleRoomUsers);
 
-    // Cleanup on unmount
+    // Cleanup listeners on unmount
     return () => {
-      socket.off("connect", handleConnect);
-      socket.off("disconnect", handleDisconnect);
+      socket.off("connect", handleReconnect);
       socket.off("draw:action", handleDrawAction);
       socket.off("user:joined", handleUserJoined);
       socket.off("user:left", handleUserLeft);
+      socket.off("room:users", handleRoomUsers);
     };
-  }, [socket, user, roomId, addRemoteAction, setIsConnected]);
+  }, [socket, user, roomId, addRemoteAction]);
 
   return (
     <div className="h-screen flex flex-col">

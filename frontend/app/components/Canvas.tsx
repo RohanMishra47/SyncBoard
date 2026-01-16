@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 import { useCanvasStore } from "../stores/canvasStore";
 import { DrawAction } from "../types";
@@ -17,35 +17,16 @@ export default function Canvas({ socket, roomId }: CanvasProps) {
 
   const { tool, color, brushSize, actions, addAction } = useCanvasStore();
 
-  // Initialize canvas
-  useEffect(() => {
+  // Function to redraw the entire canvas based on actions
+  const redrawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Set canvas size
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-
-    // Set drawing properties
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-  }, []);
-
-  // Redraw canvas when actions change
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Replay all actions
     actions.forEach((action) => {
       if (action.type === "clear") {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -69,6 +50,35 @@ export default function Canvas({ socket, roomId }: CanvasProps) {
     });
   }, [actions]);
 
+  // Initialize canvas
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const resizeCanvas = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      redrawCanvas();
+    };
+
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    return () => window.removeEventListener("resize", resizeCanvas);
+  }, [redrawCanvas]);
+
+  // Redraw canvas when actions change
+  useEffect(() => {
+    redrawCanvas();
+  }, [redrawCanvas]);
+
+  // Drawing handlers
   const startDrawing = (x: number, y: number) => {
     setIsDrawing(true);
     setCurrentPath([[x, y]]);
@@ -80,7 +90,10 @@ export default function Canvas({ socket, roomId }: CanvasProps) {
   };
 
   const stopDrawing = () => {
-    if (!isDrawing || currentPath.length === 0) return;
+    if (!isDrawing || currentPath.length === 0) {
+      setIsDrawing(false);
+      return;
+    }
 
     const action: DrawAction = {
       type: "path",
@@ -94,9 +107,13 @@ export default function Canvas({ socket, roomId }: CanvasProps) {
     addAction(action);
 
     // Emit to other users via socket
-    if (socket && roomId) {
+    if (socket && socket.connected && roomId) {
+      console.log("📤 Emitting draw action to room:", roomId);
       socket.emit("draw:action", { roomId, action });
+    } else {
+      console.warn("⚠️ Socket not connected, cannot emit action");
     }
+
     setIsDrawing(false);
     setCurrentPath([]);
   };
