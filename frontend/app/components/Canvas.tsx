@@ -86,7 +86,23 @@ export default function Canvas({ socket, roomId }: CanvasProps) {
 
   const draw = (x: number, y: number) => {
     if (!isDrawing) return;
-    setCurrentPath((prev) => [...prev, [x, y]]);
+
+    const newPath = [...currentPath, [x, y] as [number, number]];
+    setCurrentPath(newPath);
+
+    // NEW: Emit incremental update while drawing
+    if (socket && roomId && newPath.length % 3 === 0) {
+      // Throttle: only emit every 3rd point to reduce network load
+      const incrementalAction: DrawAction = {
+        type: "path",
+        tool,
+        color: tool === "eraser" ? "#FFFFFF" : color,
+        width: tool === "eraser" ? brushSize * 2 : brushSize,
+        points: newPath,
+      };
+
+      socket.emit("draw:action", { roomId, action: incrementalAction });
+    }
   };
 
   const stopDrawing = () => {
