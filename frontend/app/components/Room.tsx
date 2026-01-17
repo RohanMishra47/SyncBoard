@@ -79,7 +79,7 @@ export default function Room({ roomId }: RoomProps) {
 
   return (
     <div className="h-screen flex flex-col">
-      <Toolbar />
+      <Toolbar socket={socket} roomId={roomId} />
       <div className="flex-1 overflow-hidden">
         <Canvas socket={socket} roomId={roomId} />
       </div>

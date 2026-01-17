@@ -1,9 +1,15 @@
 "use client";
 
 import { Eraser, Pencil, Trash2, Wifi, WifiOff } from "lucide-react";
+import { Socket } from "socket.io-client";
 import { useCanvasStore } from "../stores/canvasStore";
 
-export default function Toolbar() {
+interface ToolbarProps {
+  socket: Socket | null;
+  roomId: string;
+}
+
+export default function Toolbar({ socket, roomId }: ToolbarProps) {
   const tool = useCanvasStore((state) => state.tool);
   const color = useCanvasStore((state) => state.color);
   const brushSize = useCanvasStore((state) => state.brushSize);
@@ -12,6 +18,19 @@ export default function Toolbar() {
   const setColor = useCanvasStore((state) => state.setColor);
   const setBrushSize = useCanvasStore((state) => state.setBrushSize);
   const clearCanvas = useCanvasStore((state) => state.clearCanvas);
+
+  const handleClearCanvas = () => {
+    // Clear locally
+    clearCanvas();
+
+    // Clear remotely by emitting draw action
+    if (socket && roomId) {
+      socket.emit("draw:action", {
+        roomId,
+        action: { type: "clear" },
+      });
+    }
+  };
 
   return (
     <div className="bg-white border-b border-gray-200 p-4">
@@ -93,7 +112,7 @@ export default function Toolbar() {
 
         {/* Clear Button */}
         <button
-          onClick={clearCanvas}
+          onClick={handleClearCanvas}
           className="ml-auto p-2 bg-red-500 text-white rounded hover:bg-red-600 flex items-center gap-2"
           title="Clear Canvas"
         >
