@@ -78,6 +78,37 @@ export default function Canvas({ socket, roomId }: CanvasProps) {
     redrawCanvas();
   }, [redrawCanvas]);
 
+  // Draw the current path in real-time
+  const drawCurrentPath = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    if (currentPath.length < 2) return;
+
+    ctx.strokeStyle = tool === "eraser" ? "#FFFFFF" : color;
+    ctx.lineWidth = tool === "eraser" ? brushSize * 2 : brushSize;
+
+    ctx.beginPath();
+    ctx.moveTo(currentPath[0][0], currentPath[0][1]);
+
+    currentPath.forEach(([x, y]) => {
+      ctx.lineTo(x, y);
+    });
+
+    ctx.stroke();
+  }, [currentPath, tool, color, brushSize]);
+
+  // Update drawing on currentPath change
+  useEffect(() => {
+    if (isDrawing && currentPath.length > 0) {
+      redrawCanvas(); // First redraw everything
+      drawCurrentPath(); // Then draw the current path on top
+    }
+  }, [isDrawing, currentPath, redrawCanvas, drawCurrentPath]);
+
   // Drawing handlers
   const startDrawing = (x: number, y: number) => {
     setIsDrawing(true);
@@ -90,7 +121,7 @@ export default function Canvas({ socket, roomId }: CanvasProps) {
     const newPath = [...currentPath, [x, y] as [number, number]];
     setCurrentPath(newPath);
 
-    // NEW: Emit incremental update while drawing
+    // Emit incremental update while drawing
     if (socket && roomId && newPath.length % 3 === 0) {
       // Throttle: only emit every 3rd point to reduce network load
       const incrementalAction: DrawAction = {
