@@ -1,28 +1,29 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useSocket } from "../hooks/useSocket";
 import { useCanvasStore } from "../stores/canvasStore";
+import { useSocketStore } from "../stores/socketStore";
 import { useUserStore } from "../stores/userStore";
 import { DrawAction, User } from "../types";
 import Canvas from "./Canvas";
 import Toolbar from "./Toolbar";
 
-interface RoomProps {
-  roomId: string;
-}
-
-export default function Room({ roomId }: RoomProps) {
-  const { socket, isConnected } = useSocket();
+export default function Room() {
+  const { socket, roomId, isConnected, initializeSocket } = useSocketStore();
   const user = useUserStore((state) => state.user);
   const addRemoteAction = useCanvasStore((state) => state.addRemoteAction);
   const setIsConnected = useCanvasStore((state) => state.setIsConnected);
   const hasJoinedRoom = useRef(false);
 
-  // Update store connection status
+  // Initialize socket on mount
+  useEffect(() => {
+    initializeSocket();
+  }, [initializeSocket]);
+
+  // Update canvas store connection status
   useEffect(() => {
     setIsConnected(isConnected);
-  }, [isConnected, setIsConnected]); // This isConnected comes from useSocket
+  }, [isConnected, setIsConnected]); // This isConnected comes from useSocketStore
 
   useEffect(() => {
     if (!socket || !user) return;
@@ -79,9 +80,9 @@ export default function Room({ roomId }: RoomProps) {
 
   return (
     <div className="h-screen flex flex-col">
-      <Toolbar socket={socket} roomId={roomId} />
+      <Toolbar />
       <div className="flex-1 overflow-hidden">
-        <Canvas socket={socket} roomId={roomId} />
+        <Canvas />
       </div>
     </div>
   );

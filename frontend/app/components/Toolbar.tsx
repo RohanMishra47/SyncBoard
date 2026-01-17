@@ -1,15 +1,10 @@
 "use client";
 
 import { Eraser, Pencil, Trash2, Wifi, WifiOff } from "lucide-react";
-import { Socket } from "socket.io-client";
 import { useCanvasStore } from "../stores/canvasStore";
+import { useSocketStore } from "../stores/socketStore";
 
-interface ToolbarProps {
-  socket: Socket | null;
-  roomId: string;
-}
-
-export default function Toolbar({ socket, roomId }: ToolbarProps) {
+export default function Toolbar() {
   const tool = useCanvasStore((state) => state.tool);
   const color = useCanvasStore((state) => state.color);
   const brushSize = useCanvasStore((state) => state.brushSize);
@@ -18,6 +13,8 @@ export default function Toolbar({ socket, roomId }: ToolbarProps) {
   const setColor = useCanvasStore((state) => state.setColor);
   const setBrushSize = useCanvasStore((state) => state.setBrushSize);
   const clearCanvas = useCanvasStore((state) => state.clearCanvas);
+
+  const { socket, roomId } = useSocketStore();
 
   const handleClearCanvas = () => {
     // Clear locally

@@ -1,21 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Socket } from "socket.io-client";
 import { useCanvasStore } from "../stores/canvasStore";
+import { useSocketStore } from "../stores/socketStore";
 import { DrawAction } from "../types";
 
-interface CanvasProps {
-  socket: Socket | null;
-  roomId: string;
-}
-
-export default function Canvas({ socket, roomId }: CanvasProps) {
+export default function Canvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentPath, setCurrentPath] = useState<[number, number][]>([]);
 
   const { tool, color, brushSize, actions, addAction } = useCanvasStore();
+  const { socket, roomId } = useSocketStore();
 
   // Function to redraw the entire canvas based on actions
   const redrawCanvas = useCallback(() => {
