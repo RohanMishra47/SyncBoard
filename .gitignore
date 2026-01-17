@@ -24,6 +24,7 @@ pnpm-lock.yaml
 **/.vercel/
 **/.turbo/
 **/out/
+frontend/next-env.d.ts
 
 # ======================================
 # 🚀 Express + Prisma (server)
