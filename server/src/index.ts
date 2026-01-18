@@ -5,6 +5,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import prisma from "./lib/prisma.js";
 import authRouter from "./routes/auth.js";
+import roomRoutes from "./routes/rooms.js";
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use(express.json());
 
 // Routes
 app.use("/api/auth", authRouter);
+app.use("/api/rooms", roomRoutes);
 
 // Health check route
 app.get("/health", (_req, res) => {
