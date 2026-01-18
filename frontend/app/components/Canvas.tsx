@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useCanvasStore } from "../stores/canvasStore";
 import { useSocketStore } from "../stores/socketStore";
+import { useUserStore } from "../stores/userStore";
 import { DrawAction } from "../types";
 
 export default function Canvas() {
@@ -168,10 +169,34 @@ export default function Canvas() {
     startDrawing(e.clientX - rect.left, e.clientY - rect.top);
   };
 
+  const lastEmitRef = useRef(0); // Ref to track last emit time
+
+  // Throttled cursor move emitter
+  const handleCursorMove = (x: number, y: number) => {
+    const roomId = useSocketStore.getState().roomId;
+    const user = useUserStore.getState().user;
+
+    if (!socket || !roomId || !user) return;
+
+    const now = Date.now();
+    if (now - lastEmitRef.current < 50) return;
+
+    socket.emit("cursor:move", {
+      roomId,
+      userId: user.id,
+      position: { x, y },
+    });
+
+    lastEmitRef.current = now;
+  };
+
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
-    draw(e.clientX - rect.left, e.clientY - rect.top);
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    draw(x, y);
+    handleCursorMove(x, y);
   };
 
   // Touch events
