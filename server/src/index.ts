@@ -97,6 +97,12 @@ io.on("connection", (socket) => {
     socket.to(roomId).emit("draw:action", action);
   });
 
+  // Handle undo events
+  socket.on("draw:undo", ({ roomId, action }) => {
+    // Broadcast undo to other users in the room
+    socket.to(roomId).emit("draw:undo", action);
+  });
+
   // Handle cursor movement
   socket.on("cursor:move", ({ roomId, position, userId }) => {
     socket.to(roomId).emit("cursor:move", { position, userId });
