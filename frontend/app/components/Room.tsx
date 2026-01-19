@@ -15,6 +15,7 @@ import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import Canvas from "./Canvas";
 import OnlineUsers from "./OnlineUsers";
 import Toolbar from "./Toolbar";
+import UndoRedoIndicator from "./UndoRedoIndicator";
 import UserCursors from "./UserCursors";
 
 import axios from "axios";
@@ -241,6 +242,7 @@ export default function Room({ slug }: RoomProps) {
         <div className="flex-1 relative">
           <Canvas />
           <UserCursors />
+          <UndoRedoIndicator />
         </div>
         <OnlineUsers />
       </div>
