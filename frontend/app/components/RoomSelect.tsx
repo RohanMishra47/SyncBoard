@@ -1,6 +1,6 @@
 "use client";
 
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { ArrowRight, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -11,6 +11,7 @@ export default function RoomSelect() {
   const [roomName, setRoomName] = useState("");
   const [joinSlug, setJoinSlug] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
   const [error, setError] = useState("");
 
   const user = useUserStore((state) => state.user);
@@ -50,7 +51,32 @@ export default function RoomSelect() {
     }
   };
 
-  const handleJoinRoom = (e: React.FormEvent) => {
+  const extractSlugFromInput = (input: string): string => {
+    const trimmed = input.trim();
+
+    // Check if it's a full URL
+    try {
+      const url = new URL(trimmed);
+      // Extract slug from pathname: /room/slug-here -> slug-here
+      const pathParts = url.pathname.split("/");
+      const roomIndex = pathParts.indexOf("room");
+      if (roomIndex !== -1 && pathParts[roomIndex + 1]) {
+        return pathParts[roomIndex + 1];
+      }
+    } catch {
+      // Not a valid URL, treat as slug
+    }
+
+    // Check if it's a path like "/room/slug-here"
+    if (trimmed.startsWith("/room/")) {
+      return trimmed.replace("/room/", "");
+    }
+
+    // Otherwise, treat as direct slug
+    return trimmed;
+  };
+
+  const handleJoinRoom = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!joinSlug.trim()) {
@@ -58,8 +84,35 @@ export default function RoomSelect() {
       return;
     }
 
-    // Navigate to the room
-    router.push(`/room/${joinSlug.trim()}`);
+    setIsJoining(true);
+    setError("");
+
+    try {
+      // Extract slug from whatever format user provided
+      const slug = extractSlugFromInput(joinSlug);
+
+      if (!slug) {
+        setError("Invalid room code or URL");
+        setIsJoining(false);
+        return;
+      }
+
+      // Verify room exists before navigating
+      await axios.get(`${API_URL}/api/rooms/${slug}`);
+
+      // Room exists, navigate to it
+      router.push(`/room/${slug}`);
+    } catch (err) {
+      const error = err as AxiosError;
+      if (error.response?.status === 404) {
+        setError("Room not found. Please check the room code and try again.");
+      } else {
+        setError("Failed to join room. Please try again.");
+      }
+      console.error(err);
+    } finally {
+      setIsJoining(false);
+    }
   };
 
   return (
@@ -127,23 +180,31 @@ export default function RoomSelect() {
                   type="text"
                   value={joinSlug}
                   onChange={(e) => setJoinSlug(e.target.value)}
-                  placeholder="e.g., design-brainstorm-abc123"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Paste room link or code"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  disabled={isJoining}
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  Get the room code from the &quot;Share&quot; button in an
+                  active room
+                </p>
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition-colors"
+                disabled={isJoining}
+                className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
               >
-                Join Room
+                {isJoining ? "Joining..." : "Join Room"}
               </button>
             </form>
           </div>
         </div>
 
         {error && (
-          <p className="mt-4 text-red-500 text-sm text-center">{error}</p>
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-600 text-sm text-center">{error}</p>
+          </div>
         )}
       </div>
     </div>
