@@ -140,6 +140,23 @@ export default function Room({ slug }: RoomProps) {
       updateUserCursor(userId, position.x, position.y);
     };
 
+    const handleRemoteUndo = (action: DrawAction) => {
+      console.log("Remote undo received:", action);
+
+      // Remove the matching action from our canvas
+      const currentActions = useCanvasStore.getState().actions;
+      const actionIndex = currentActions.findIndex(
+        (a) => JSON.stringify(a) === JSON.stringify(action),
+      );
+
+      if (actionIndex !== -1) {
+        const newActions = currentActions.filter(
+          (_, idx) => idx !== actionIndex,
+        );
+        useCanvasStore.getState().setActions(newActions);
+      }
+    };
+
     // Register event listeners
     socket.on("connect", handleReconnect);
     socket.on("draw:action", handleDrawAction);
@@ -147,6 +164,7 @@ export default function Room({ slug }: RoomProps) {
     socket.on("user:left", handleUserLeft);
     socket.on("room:users", handleRoomUsers);
     socket.on("cursor:move", handleCursorMove);
+    socket.on("draw:undo", handleRemoteUndo);
 
     // Cleanup on unmount
     return () => {
@@ -156,6 +174,7 @@ export default function Room({ slug }: RoomProps) {
       socket.off("user:left", handleUserLeft);
       socket.off("room:users", handleRoomUsers);
       socket.off("cursor:move", handleCursorMove);
+      socket.off("draw:undo", handleRemoteUndo);
     };
   }, [
     socket,
