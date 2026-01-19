@@ -10,6 +10,8 @@ import { useUserStore } from "../stores/userStore";
 
 import { ConnectedUser, DrawAction, User } from "../types";
 
+import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
+
 import Canvas from "./Canvas";
 import OnlineUsers from "./OnlineUsers";
 import Toolbar from "./Toolbar";
@@ -46,6 +48,9 @@ export default function Room({ slug }: RoomProps) {
 
   // Ref to track if user has joined the room
   const hasJoinedRoom = useRef(false);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts();
 
   // Set roomId in socket store when slug changes
   useEffect(() => {
