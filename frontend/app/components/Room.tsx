@@ -27,7 +27,8 @@ export default function Room({ slug }: RoomProps) {
   const router = useRouter();
 
   // Socket and user stores
-  const { socket, roomId, isConnected, initializeSocket } = useSocketStore();
+  const { socket, roomId, isConnected, initializeSocket, setRoomId } =
+    useSocketStore();
   const user = useUserStore((state) => state.user);
   const addRemoteAction = useCanvasStore((state) => state.addRemoteAction);
   const setIsConnected = useCanvasStore((state) => state.setIsConnected);
@@ -46,6 +47,11 @@ export default function Room({ slug }: RoomProps) {
   // Ref to track if user has joined the room
   const hasJoinedRoom = useRef(false);
 
+  // Set roomId in socket store when slug changes
+  useEffect(() => {
+    setRoomId(slug);
+  }, [slug, setRoomId]);
+
   // Initialize socket on mount
   useEffect(() => {
     initializeSocket();
@@ -54,7 +60,7 @@ export default function Room({ slug }: RoomProps) {
   // Update canvas connection status
   useEffect(() => {
     setIsConnected(isConnected);
-  }, [isConnected, setIsConnected]); // This isConnected comes from socket store
+  }, [isConnected, setIsConnected]);
 
   // Fetch room data
   useEffect(() => {
@@ -82,22 +88,27 @@ export default function Room({ slug }: RoomProps) {
 
   // Socket event handlers
   useEffect(() => {
-    if (!socket || !user) return;
+    if (!socket || !user || !roomId) return;
+
+    console.log("🔌 Setting up socket listeners for room:", roomId);
 
     // Join room on initial connection
     if (socket.connected && !hasJoinedRoom.current) {
+      console.log("👋 Emitting join:room with:", { roomId, user: user.name });
       socket.emit("join:room", { roomId, user });
       hasJoinedRoom.current = true;
     }
 
     // Event handlers
     const handleReconnect = () => {
+      console.log("🔄 Reconnecting to room:", roomId);
       hasJoinedRoom.current = false;
       socket.emit("join:room", { roomId, user });
       hasJoinedRoom.current = true;
     };
 
     const handleDrawAction = (action: DrawAction) => {
+      console.log("🎨 Received draw action:", action.type);
       addRemoteAction(action);
     };
 
@@ -110,6 +121,7 @@ export default function Room({ slug }: RoomProps) {
     };
 
     const handleRoomUsers = (users: ConnectedUser[]) => {
+      console.log("👥 Room users updated:", users.length, "users");
       setConnectedUsers(users);
     };
 
