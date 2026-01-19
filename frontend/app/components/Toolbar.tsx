@@ -1,6 +1,14 @@
 "use client";
 
-import { Eraser, Pencil, Trash2, Wifi, WifiOff } from "lucide-react";
+import {
+  Eraser,
+  Pencil,
+  Redo2,
+  Trash2,
+  Undo2,
+  Wifi,
+  WifiOff,
+} from "lucide-react";
 import { useCanvasStore } from "../stores/canvasStore";
 import { useSocketStore } from "../stores/socketStore";
 
@@ -13,6 +21,10 @@ export default function Toolbar() {
   const setColor = useCanvasStore((state) => state.setColor);
   const setBrushSize = useCanvasStore((state) => state.setBrushSize);
   const clearCanvas = useCanvasStore((state) => state.clearCanvas);
+  const undo = useCanvasStore((state) => state.undo);
+  const redo = useCanvasStore((state) => state.redo);
+  const canUndo = useCanvasStore((state) => state.canUndo());
+  const canRedo = useCanvasStore((state) => state.canRedo());
 
   const { socket, roomId } = useSocketStore();
 
@@ -26,6 +38,24 @@ export default function Toolbar() {
         roomId,
         action: { type: "clear" },
       });
+    }
+  };
+
+  const handleUndo = () => {
+    const undoneAction = undo();
+
+    if (undoneAction && socket && roomId) {
+      // Emit undo event to server
+      socket.emit("draw:undo", { roomId, action: undoneAction });
+    }
+  };
+
+  const handleRedo = () => {
+    const redoneAction = redo();
+
+    if (redoneAction && socket && roomId) {
+      // Emit the redone action as a new draw action
+      socket.emit("draw:action", { roomId, action: redoneAction });
     }
   };
 
@@ -56,7 +86,7 @@ export default function Toolbar() {
                 ? "bg-blue-500 text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
-            title="Pen"
+            title="Pen (P)"
           >
             <Pencil size={20} />
           </button>
@@ -68,9 +98,38 @@ export default function Toolbar() {
                 ? "bg-blue-500 text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
-            title="Eraser"
+            title="Eraser (E)"
           >
             <Eraser size={20} />
+          </button>
+        </div>
+
+        {/* Undo/Redo */}
+        <div className="flex gap-2">
+          <button
+            onClick={handleUndo}
+            disabled={!canUndo}
+            className={`p-2 rounded ${
+              canUndo
+                ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                : "bg-gray-50 text-gray-400 cursor-not-allowed"
+            }`}
+            title="Undo (Ctrl+Z)"
+          >
+            <Undo2 size={20} />
+          </button>
+
+          <button
+            onClick={handleRedo}
+            disabled={!canRedo}
+            className={`p-2 rounded ${
+              canRedo
+                ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                : "bg-gray-50 text-gray-400 cursor-not-allowed"
+            }`}
+            title="Redo (Ctrl+Y)"
+          >
+            <Redo2 size={20} />
           </button>
         </div>
 
