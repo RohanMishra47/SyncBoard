@@ -42,6 +42,7 @@ export default function Room({ slug }: RoomProps) {
   const setConnectedUsers = useRoomStore((state) => state.setConnectedUsers);
   const updateUserCursor = useRoomStore((state) => state.updateUserCursor);
   const setActions = useCanvasStore((state) => state.setActions);
+  const removeActionById = useCanvasStore((state) => state.removeActionById);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -142,21 +143,18 @@ export default function Room({ slug }: RoomProps) {
     };
 
     const handleRemoteUndo = (action: DrawAction) => {
-      console.log("Remote undo received:", action);
-
-      // Remove the matching action from our canvas
-      const currentActions = useCanvasStore.getState().actions;
-      const actionIndex = currentActions.findIndex(
-        (a) => JSON.stringify(a) === JSON.stringify(action),
-      );
-
-      if (actionIndex !== -1) {
-        const newActions = currentActions.filter(
-          (_, idx) => idx !== actionIndex,
-        );
-        useCanvasStore.getState().setActions(newActions);
-      }
+      // Use the store method instead of imperatively setting state
+      removeActionById(action.id);
     };
+
+    //Remove all existing listeners first to prevent duplicates
+    socket.off("connect", handleReconnect);
+    socket.off("draw:action", handleDrawAction);
+    socket.off("user:joined", handleUserJoined);
+    socket.off("user:left", handleUserLeft);
+    socket.off("room:users", handleRoomUsers);
+    socket.off("cursor:move", handleCursorMove);
+    socket.off("draw:undo", handleRemoteUndo);
 
     // Register event listeners
     socket.on("connect", handleReconnect);
@@ -184,6 +182,7 @@ export default function Room({ slug }: RoomProps) {
     addRemoteAction,
     setConnectedUsers,
     updateUserCursor,
+    removeActionById,
   ]);
 
   const copyRoomLink = () => {

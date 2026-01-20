@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { DrawAction, Tool } from "../types";
+import { useUserStore } from "./userStore";
 
 const MAX_HISTORY = 50; // Limit history to prevent memory issues
 
@@ -16,8 +17,8 @@ interface CanvasStore {
   actions: DrawAction[];
   undoneActions: DrawAction[]; // For redo functionality
 
-  // User's own actions (for collaborative undo)
-  myActionIndices: number[];
+  // Track IDs of user's own actions for undo/redo
+  myActionIds: string[];
 
   // Actions
   setTool: (tool: Tool) => void;
@@ -30,6 +31,8 @@ interface CanvasStore {
 
   // Remote actions (from other users)
   addRemoteAction: (action: DrawAction) => void;
+
+  removeActionById: (actionId: string) => void;
 
   // History management
   undo: () => DrawAction | null;
@@ -50,61 +53,63 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
   actions: [],
   isConnected: false,
   undoneActions: [],
-  myActionIndices: [],
+  myActionIds: [],
 
   // State updaters
   setTool: (tool) => set({ tool }),
   setColor: (color) => set({ color }),
   setBrushSize: (size) => set({ brushSize: size }),
 
-  // Add local action (your own drawing)
+  // Add local action
   addAction: (action) =>
-    set((state) => {
-      const newActions = [...state.actions, action];
-      const newIndex = newActions.length - 1;
-
-      return {
-        actions: newActions,
-        myActionIndices: [...state.myActionIndices, newIndex],
-        undoneActions: [], // Clear redo stack when new action is added
-      };
-    }),
-
-  // Add remote action (from other users)
-  addRemoteAction: (action) =>
     set((state) => ({
       actions: [...state.actions, action],
-      // Note: Don't add to myActionIndices (not our action)
+      myActionIds: [...state.myActionIds, action.id],
+      undoneActions: [],
     })),
 
+  // Add remote action
+  addRemoteAction: (action) =>
+    set((state) => {
+      // If we already have this action ID, replace it (incremental update)
+      const existingIndex = state.actions.findIndex((a) => a.id === action.id);
+
+      if (existingIndex !== -1) {
+        const newActions = [...state.actions];
+        newActions[existingIndex] = action;
+        return { actions: newActions };
+      }
+
+      // Otherwise add as new action
+      return { actions: [...state.actions, action] };
+    }),
+
   setIsConnected: (connected) => set({ isConnected: connected }),
+
+  removeActionById: (actionId: string) =>
+    set((state) => ({
+      actions: state.actions.filter((a) => a.id !== actionId),
+      // Don't modify myActionIds - this is a remote removal
+    })),
 
   // Undo (only your own actions)
   undo: () => {
     const state = get();
 
-    if (state.myActionIndices.length === 0) {
-      return null; // Nothing to undo
+    if (state.myActionIds.length === 0) {
+      return null;
     }
 
-    // Get the index of the last action we performed
-    const lastMyActionIndex =
-      state.myActionIndices[state.myActionIndices.length - 1];
-    const actionToUndo = state.actions[lastMyActionIndex];
+    const lastMyActionId = state.myActionIds[state.myActionIds.length - 1];
+    const actionToUndo = state.actions.find((a) => a.id === lastMyActionId);
 
-    // Remove this action from the canvas
-    const newActions = state.actions.filter(
-      (_, idx) => idx !== lastMyActionIndex,
-    );
+    if (!actionToUndo) return null;
 
-    // Update myActionIndices to reflect the removed action
-    const newMyActionIndices = state.myActionIndices
-      .slice(0, -1)
-      .map((idx) => (idx > lastMyActionIndex ? idx - 1 : idx));
+    const newActions = state.actions.filter((a) => a.id !== lastMyActionId);
 
     set({
       actions: newActions,
-      myActionIndices: newMyActionIndices,
+      myActionIds: state.myActionIds.slice(0, -1),
       undoneActions: [...state.undoneActions, actionToUndo].slice(-MAX_HISTORY),
     });
 
@@ -116,16 +121,14 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     const state = get();
 
     if (state.undoneActions.length === 0) {
-      return null; // Nothing to redo
+      return null;
     }
 
     const actionToRedo = state.undoneActions[state.undoneActions.length - 1];
-    const newActions = [...state.actions, actionToRedo];
-    const newIndex = newActions.length - 1;
 
     set({
-      actions: newActions,
-      myActionIndices: [...state.myActionIndices, newIndex],
+      actions: [...state.actions, actionToRedo],
+      myActionIds: [...state.myActionIds, actionToRedo.id],
       undoneActions: state.undoneActions.slice(0, -1),
     });
 
@@ -134,7 +137,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
 
   // Check if undo is available
   canUndo: () => {
-    return get().myActionIndices.length > 0;
+    return get().myActionIds.length > 0;
   },
 
   // Check if redo is available
@@ -145,13 +148,16 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
   // Clear canvas
   clearCanvas: () =>
     set((state) => {
-      const clearAction: DrawAction = { type: "clear" };
-      const newActions = [...state.actions, clearAction];
-      const newIndex = newActions.length - 1;
+      const clearAction: DrawAction = {
+        id: `clear-${Date.now()}-${Math.random()}`,
+        type: "clear",
+        userId: useUserStore.getState().user?.id,
+        timestamp: Date.now(),
+      };
 
       return {
-        actions: newActions,
-        myActionIndices: [...state.myActionIndices, newIndex],
+        actions: [...state.actions, clearAction],
+        myActionIds: [...state.myActionIds, clearAction.id],
         undoneActions: [],
       };
     }),
@@ -160,7 +166,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
   setActions: (actions) =>
     set({
       actions,
-      myActionIndices: [], // Reset since these are loaded actions
+      myActionIds: [], // Reset since these are loaded actions
       undoneActions: [],
     }),
 }));

@@ -29,14 +29,17 @@ export default function Toolbar() {
   const { socket, roomId } = useSocketStore();
 
   const handleClearCanvas = () => {
-    // Clear locally
     clearCanvas();
 
-    // Clear remotely by emitting draw action
     if (socket && roomId) {
+      const clearAction =
+        useCanvasStore.getState().actions[
+          useCanvasStore.getState().actions.length - 1
+        ];
+
       socket.emit("draw:action", {
         roomId,
-        action: { type: "clear" },
+        action: clearAction, // Send the full action with ID
       });
     }
   };

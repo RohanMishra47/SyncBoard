@@ -2,11 +2,14 @@ export type Tool = "pen" | "eraser";
 
 // Draw action type
 export interface DrawAction {
+  id: string; //unique identifier for each action
   type: "path" | "clear";
   tool?: Tool;
   color?: string;
   width?: number;
   points?: [number, number][];
+  userId?: string; //track who created the action
+  timestamp?: number; // when the action was created
 }
 
 // User type

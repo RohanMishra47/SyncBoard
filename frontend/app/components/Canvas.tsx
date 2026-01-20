@@ -10,8 +10,13 @@ export default function Canvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentPath, setCurrentPath] = useState<[number, number][]>([]);
+  const currentActionId = useRef<string | null>(null);
 
-  const { tool, color, brushSize, actions, addAction } = useCanvasStore();
+  const actions = useCanvasStore((state) => state.actions);
+  const tool = useCanvasStore((state) => state.tool);
+  const color = useCanvasStore((state) => state.color);
+  const brushSize = useCanvasStore((state) => state.brushSize);
+  const addAction = useCanvasStore((state) => state.addAction);
   const { socket, roomId } = useSocketStore();
 
   // Function to redraw the entire canvas based on actions
@@ -110,23 +115,28 @@ export default function Canvas() {
   const startDrawing = (x: number, y: number) => {
     setIsDrawing(true);
     setCurrentPath([[x, y]]);
-  };
 
+    // Generate ID when drawing starts
+    const user = useUserStore.getState().user;
+    currentActionId.current = `${user?.id || "unknown"}-${Date.now()}-${Math.random()}`;
+  };
   const draw = (x: number, y: number) => {
     if (!isDrawing) return;
 
     const newPath = [...currentPath, [x, y] as [number, number]];
     setCurrentPath(newPath);
 
-    // Emit incremental update while drawing
+    // Emit incremental update with the SAME ID
     if (socket && roomId && newPath.length % 3 === 0) {
-      // Throttle: only emit every 3rd point to reduce network load
       const incrementalAction: DrawAction = {
+        id: currentActionId.current!, // Use the same ID
         type: "path",
         tool,
         color: tool === "eraser" ? "#FFFFFF" : color,
         width: tool === "eraser" ? brushSize * 2 : brushSize,
         points: newPath,
+        userId: useUserStore.getState().user?.id,
+        timestamp: Date.now(),
       };
 
       socket.emit("draw:action", { roomId, action: incrementalAction });
@@ -136,30 +146,30 @@ export default function Canvas() {
   const stopDrawing = () => {
     if (!isDrawing || currentPath.length === 0) {
       setIsDrawing(false);
+      currentActionId.current = null; // Clear the ID
       return;
     }
 
     const action: DrawAction = {
+      id: currentActionId.current!, // Use the SAME ID as incremental updates
       type: "path",
       tool,
       color: tool === "eraser" ? "#FFFFFF" : color,
       width: tool === "eraser" ? brushSize * 2 : brushSize,
       points: currentPath,
+      userId: useUserStore.getState().user?.id,
+      timestamp: Date.now(),
     };
 
-    // Add to local state
     addAction(action);
 
-    // Emit to other users via socket
     if (socket && socket.connected && roomId) {
-      console.log("📤 Emitting draw action to room:", roomId);
       socket.emit("draw:action", { roomId, action });
-    } else {
-      console.warn("⚠️ Socket not connected, cannot emit action");
     }
 
     setIsDrawing(false);
     setCurrentPath([]);
+    currentActionId.current = null; // Clear the ID
   };
 
   // Mouse events
