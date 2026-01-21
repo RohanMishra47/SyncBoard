@@ -81,17 +81,29 @@ router.get("/:slug", async (req, res) => {
 router.put("/:slug/canvas", async (req, res) => {
   try {
     const { slug } = req.params;
-    const { canvasData } = req.body;
+    const { actions } = req.body;
+
+    if (!actions || !Array.isArray(actions)) {
+      return res.status(400).json({ error: "Invalid canvas data" });
+    }
+
+    // Limit stored actions to prevent database bloat
+    const MAX_STORED_ACTIONS = 1000;
+    const actionsToStore = actions.slice(-MAX_STORED_ACTIONS);
 
     const room = await prisma.room.update({
       where: { slug },
       data: {
-        canvasData,
+        canvasData: { actions: actionsToStore },
         updatedAt: new Date(),
       },
     });
 
-    return res.json({ room });
+    return res.json({
+      room,
+      savedActions: actionsToStore.length,
+      truncated: actions.length > MAX_STORED_ACTIONS,
+    });
   } catch (error) {
     console.error("Canvas save error:", error);
     return res.status(500).json({ error: "Failed to save canvas" });
