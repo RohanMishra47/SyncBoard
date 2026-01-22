@@ -1,8 +1,8 @@
 "use client";
 
 import axios from "axios";
+import { debounce } from "lodash";
 import { useCallback, useEffect, useRef } from "react";
-import { debounce } from "../lib/debounce";
 import { useCanvasStore } from "../stores/canvasStore";
 import { useRoomStore } from "../stores/roomStore";
 
