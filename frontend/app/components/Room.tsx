@@ -10,10 +10,12 @@ import { useUserStore } from "../stores/userStore";
 
 import { ConnectedUser, DrawAction, User } from "../types";
 
+import { useAutoSave } from "../hooks/useAutoSave";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 
 import Canvas from "./Canvas";
 import OnlineUsers from "./OnlineUsers";
+import SaveIndicator from "./SaveIndicator";
 import Toolbar from "./Toolbar";
 import UndoRedoIndicator from "./UndoRedoIndicator";
 import UserCursors from "./UserCursors";
@@ -53,6 +55,9 @@ export default function Room({ slug }: RoomProps) {
 
   // Keyboard shortcuts
   useKeyboardShortcuts();
+
+  // Auto-save hook
+  useAutoSave();
 
   // Set roomId in socket store when slug changes
   useEffect(() => {
@@ -242,6 +247,7 @@ export default function Room({ slug }: RoomProps) {
           <Canvas />
           <UserCursors />
           <UndoRedoIndicator />
+          <SaveIndicator />
         </div>
         <OnlineUsers />
       </div>
