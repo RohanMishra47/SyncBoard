@@ -2,6 +2,7 @@
 
 import axios from "axios";
 import { useCallback, useEffect, useRef } from "react";
+import { simplifyDrawAction } from "../lib/simplifyPath";
 import { useCanvasStore } from "../stores/canvasStore";
 import { useRoomStore } from "../stores/roomStore";
 import { useSaveStore } from "../stores/saveStore";
@@ -42,9 +43,14 @@ export function useAutoSave() {
     console.log(`💾 Saving ${currentActionCount} actions...`);
 
     try {
+      // Simplify actions before sending
+      const simplifiedActions = actions.map((action) =>
+        simplifyDrawAction(action),
+      );
+
       const response = await axios.put(
         `${API_URL}/api/rooms/${room.slug}/canvas`,
-        { actions },
+        { actions: simplifiedActions },
         {
           headers: {
             "Content-Type": "application/json",

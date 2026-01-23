@@ -7,7 +7,7 @@ export default function SaveIndicator() {
   const saveStatus = useSaveStore((state) => state.saveStatus);
 
   return (
-    <div className="fixed top-4 right-4 bg-white rounded-lg shadow-md px-3 py-2 flex items-center gap-2 text-sm">
+    <div className="fixed top-4 right-2/4 bg-white rounded-lg shadow-md px-3 py-2 flex items-center gap-2 text-sm">
       {saveStatus === "saved" && (
         <>
           <Check size={16} className="text-green-500" />

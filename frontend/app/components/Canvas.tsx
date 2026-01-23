@@ -151,20 +151,18 @@ export default function Canvas() {
     setCurrentPath(newPath);
 
     // Emit incremental update with the SAME ID
-    if (socket && roomId && newPath.length % 3 === 0) {
-      const incrementalAction: DrawAction = {
-        id: currentActionId.current!, // Use the same ID
-        type: "path",
-        tool,
-        color: tool === "eraser" ? "#FFFFFF" : color,
-        width: tool === "eraser" ? brushSize * 2 : brushSize,
-        points: newPath,
-        userId: useUserStore.getState().user?.id,
-        timestamp: Date.now(),
-      };
+    const incrementalAction: DrawAction = {
+      id: currentActionId.current!,
+      type: "path",
+      tool,
+      color: tool === "eraser" ? "#FFFFFF" : color,
+      width: tool === "eraser" ? brushSize * 2 : brushSize,
+      points: newPath,
+      userId: useUserStore.getState().user?.id,
+      timestamp: Date.now(),
+    };
 
-      emitDrawAction(incrementalAction);
-    }
+    emitDrawAction(incrementalAction);
   };
 
   const stopDrawing = () => {

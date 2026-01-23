@@ -20,7 +20,8 @@ const io = new Server(httpServer, {
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "10mb" })); // Increased limit for large canvas data
+app.use(express.urlencoded({ limit: "10mb", extended: true })); // Parsing URL-encoded data
 
 // Routes
 app.use("/api/auth", authRouter);
