@@ -1,29 +1,10 @@
 "use client";
 
-import { Check, Cloud, CloudOff } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useCanvasStore } from "../stores/canvasStore";
+import { AlertCircle, Check, Cloud, CloudOff } from "lucide-react";
+import { useSaveStore } from "../stores/saveStore";
 
 export default function SaveIndicator() {
-  const [saveStatus, setSaveStatus] = useState<"saved" | "saving">("saved");
-  const lastActionCount = useCanvasStore((state) => state.actions.length);
-  const isUnsaved = saveStatus === "saved" && lastActionCount > 0;
-
-  useEffect(() => {
-    if (lastActionCount === 0) return;
-
-    const timer = setTimeout(() => {
-      setSaveStatus("saving");
-
-      const saveTimer = setTimeout(() => {
-        setSaveStatus("saved");
-      }, 500);
-
-      return () => clearTimeout(saveTimer);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [lastActionCount]);
+  const saveStatus = useSaveStore((state) => state.saveStatus);
 
   return (
     <div className="fixed top-4 right-4 bg-white rounded-lg shadow-md px-3 py-2 flex items-center gap-2 text-sm">
@@ -33,16 +14,25 @@ export default function SaveIndicator() {
           <span className="text-gray-600">Saved</span>
         </>
       )}
+
       {saveStatus === "saving" && (
         <>
           <Cloud size={16} className="text-blue-500 animate-pulse" />
           <span className="text-gray-600">Saving...</span>
         </>
       )}
-      {isUnsaved && (
+
+      {saveStatus === "unsaved" && (
         <>
-          <CloudOff size={16} className="text-gray-400" />
-          <span className="text-gray-400">Unsaved changes</span>
+          <CloudOff size={16} className="text-orange-500" />
+          <span className="text-gray-600">Unsaved changes</span>
+        </>
+      )}
+
+      {saveStatus === "error" && (
+        <>
+          <AlertCircle size={16} className="text-red-500" />
+          <span className="text-red-600">Save failed</span>
         </>
       )}
     </div>

@@ -3,6 +3,8 @@ import { DrawAction, Tool } from "../types";
 import { useUserStore } from "./userStore";
 
 const MAX_HISTORY = 50; // Limit history to prevent memory issues
+const MAX_ACTIONS = 1000; // Max actions to keep in store
+const WARNING_THRESHOLD = 0.9; // Warn when actions reach 90% of max
 
 interface CanvasStore {
   // Drawing state
@@ -12,6 +14,9 @@ interface CanvasStore {
 
   // Connection state
   isConnected: boolean;
+
+  // Limit tracking
+  isApproachingLimit: boolean;
 
   // Action history
   actions: DrawAction[];
@@ -52,6 +57,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
   brushSize: 3,
   actions: [],
   isConnected: false,
+  isApproachingLimit: false,
   undoneActions: [],
   myActionIds: [],
 
@@ -62,16 +68,50 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
 
   // Add local action
   addAction: (action) =>
-    set((state) => ({
-      actions: [...state.actions, action],
-      myActionIds: [...state.myActionIds, action.id],
-      undoneActions: [],
-    })),
+    set((state) => {
+      const newActions = [...state.actions, action];
+      const newMyActionIds = [...state.myActionIds, action.id];
+
+      // Check if approaching limit
+      const isApproaching =
+        newActions.length >= MAX_ACTIONS * WARNING_THRESHOLD;
+
+      if (isApproaching && !state.isApproachingLimit) {
+        console.warn(
+          `⚠️ Canvas approaching action limit: ${newActions.length}/${MAX_ACTIONS}. Older actions will be removed.`,
+        );
+      }
+
+      // Truncate if exceeding limit
+      let truncatedActions = newActions;
+      let truncatedMyActionIds = newMyActionIds;
+
+      if (newActions.length > MAX_ACTIONS) {
+        const removeCount = newActions.length - MAX_ACTIONS;
+        truncatedActions = newActions.slice(removeCount);
+
+        // Remove IDs that no longer exist in truncated actions
+        const remainingIds = new Set(truncatedActions.map((a) => a.id));
+        truncatedMyActionIds = newMyActionIds.filter((id) =>
+          remainingIds.has(id),
+        );
+
+        console.warn(
+          `🗑️ Canvas limit exceeded. Removed ${removeCount} oldest actions.`,
+        );
+      }
+
+      return {
+        actions: truncatedActions,
+        myActionIds: truncatedMyActionIds,
+        undoneActions: [], // Clear redo history
+        isApproachingLimit: isApproaching,
+      };
+    }),
 
   // Add remote action
   addRemoteAction: (action) =>
     set((state) => {
-      // If we already have this action ID, replace it (incremental update)
       const existingIndex = state.actions.findIndex((a) => a.id === action.id);
 
       if (existingIndex !== -1) {
@@ -80,8 +120,30 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
         return { actions: newActions };
       }
 
-      // Otherwise add as new action
-      return { actions: [...state.actions, action] };
+      const newActions = [...state.actions, action];
+
+      // Check and truncate for remote actions too
+      let truncatedActions = newActions;
+      let truncatedMyActionIds = state.myActionIds;
+
+      if (newActions.length > MAX_ACTIONS) {
+        const removeCount = newActions.length - MAX_ACTIONS;
+        truncatedActions = newActions.slice(removeCount);
+
+        const remainingIds = new Set(truncatedActions.map((a) => a.id));
+        truncatedMyActionIds = state.myActionIds.filter((id) =>
+          remainingIds.has(id),
+        );
+      }
+
+      const isApproaching =
+        truncatedActions.length >= MAX_ACTIONS * WARNING_THRESHOLD;
+
+      return {
+        actions: truncatedActions,
+        myActionIds: truncatedMyActionIds,
+        isApproachingLimit: isApproaching,
+      };
     }),
 
   setIsConnected: (connected) => set({ isConnected: connected }),
