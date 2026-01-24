@@ -17,7 +17,7 @@ import { useRoomStore } from "../stores/roomStore";
 import { useSocketStore } from "../stores/socketStore";
 
 interface ToolbarProps {
-  canvasRef?: React.RefObject<HTMLCanvasElement>;
+  canvasRef?: React.RefObject<HTMLCanvasElement | null>;
 }
 
 export default function Toolbar({ canvasRef }: ToolbarProps) {

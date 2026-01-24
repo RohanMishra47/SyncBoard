@@ -1,14 +1,28 @@
 "use client";
 
 import { throttle } from "lodash";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import { useCanvasStore } from "../stores/canvasStore";
 import { useSocketStore } from "../stores/socketStore";
 import { useUserStore } from "../stores/userStore";
 import { DrawAction } from "../types";
 
-export default function Canvas() {
+interface CanvasProps {
+  ref?: React.Ref<HTMLCanvasElement>;
+}
+
+export default function Canvas({ ref }: CanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Expose canvas ref to parent
+  useImperativeHandle(ref, () => canvasRef.current!);
+
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentPath, setCurrentPath] = useState<[number, number][]>([]);
   const currentActionId = useRef<string | null>(null);

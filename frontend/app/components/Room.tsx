@@ -31,6 +31,9 @@ interface RoomProps {
 export default function Room({ slug }: RoomProps) {
   const router = useRouter();
 
+  // We pass the canvasRef to Canvas which gives access to the canvas element which we then pass to Toolbar for export functionality
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
   // Socket and user stores
   const { socket, roomId, isConnected, initializeSocket, setRoomId } =
     useSocketStore();
@@ -240,11 +243,11 @@ export default function Room({ slug }: RoomProps) {
         </button>
       </div>
 
-      <Toolbar />
+      <Toolbar canvasRef={canvasRef} />
 
       <div className="flex-1 flex overflow-hidden">
         <div className="flex-1 relative">
-          <Canvas />
+          <Canvas ref={canvasRef} />
           <UserCursors />
           <UndoRedoIndicator />
           <SaveIndicator />
