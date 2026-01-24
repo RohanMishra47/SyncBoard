@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Download,
   Eraser,
   Pencil,
   Redo2,
@@ -9,10 +10,19 @@ import {
   Wifi,
   WifiOff,
 } from "lucide-react";
+import React from "react";
+import { exportCanvasToPNG, exportCanvasToSVG } from "../lib/export";
 import { useCanvasStore } from "../stores/canvasStore";
+import { useRoomStore } from "../stores/roomStore";
 import { useSocketStore } from "../stores/socketStore";
 
-export default function Toolbar() {
+interface ToolbarProps {
+  canvasRef?: React.RefObject<HTMLCanvasElement>;
+}
+
+export default function Toolbar({ canvasRef }: ToolbarProps) {
+  const room = useRoomStore((state) => state.room);
+  const actions = useCanvasStore((state) => state.actions);
   const tool = useCanvasStore((state) => state.tool);
   const color = useCanvasStore((state) => state.color);
   const brushSize = useCanvasStore((state) => state.brushSize);
@@ -27,6 +37,8 @@ export default function Toolbar() {
   const canRedo = useCanvasStore((state) => state.canRedo());
 
   const { socket, roomId } = useSocketStore();
+
+  const [showExportMenu, setShowExportMenu] = React.useState(false);
 
   const handleClearCanvas = () => {
     clearCanvas();
@@ -59,6 +71,22 @@ export default function Toolbar() {
     if (redoneAction && socket && roomId) {
       // Emit the redone action as a new draw action
       socket.emit("draw:action", { roomId, action: redoneAction });
+    }
+  };
+
+  const handleExportPNG = () => {
+    if (canvasRef?.current) {
+      const filename = `${room?.name || "syncboard"}-${Date.now()}.png`;
+      exportCanvasToPNG(canvasRef.current, filename);
+      setShowExportMenu(false);
+    }
+  };
+
+  const handleExportSVG = () => {
+    if (canvasRef?.current) {
+      const filename = `${room?.name || "syncboard"}-${Date.now()}.svg`;
+      exportCanvasToSVG(canvasRef.current, actions, filename);
+      setShowExportMenu(false);
     }
   };
 
@@ -169,16 +197,55 @@ export default function Toolbar() {
           <span className="text-sm text-gray-600 w-6">{brushSize}</span>
         </div>
 
-        {/* Clear Button */}
-        <button
-          onClick={handleClearCanvas}
-          className="ml-auto p-2 bg-red-500 text-white rounded hover:bg-red-600 flex items-center gap-2"
-          title="Clear Canvas"
-        >
-          <Trash2 size={20} />
-          Clear
-        </button>
+        <div className="ml-auto flex gap-2">
+          {/* Export Button */}
+          <div className="relative">
+            <button
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              className="p-2 bg-green-500 text-white rounded hover:bg-green-600 flex items-center gap-2"
+              title="Export Canvas"
+            >
+              <Download size={20} />
+              Export
+            </button>
+
+            {showExportMenu && (
+              <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-10">
+                <button
+                  onClick={handleExportPNG}
+                  className="w-full px-4 py-2 text-left hover:bg-gray-100 text-gray-700"
+                >
+                  Export as PNG
+                </button>
+                <button
+                  onClick={handleExportSVG}
+                  className="w-full px-4 py-2 text-left hover:bg-gray-100 text-gray-700"
+                >
+                  Export as SVG
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Clear Button */}
+          <button
+            onClick={handleClearCanvas}
+            className="p-2 bg-red-500 text-white rounded hover:bg-red-600 flex items-center gap-2"
+            title="Clear Canvas"
+          >
+            <Trash2 size={20} />
+            Clear
+          </button>
+        </div>
       </div>
+
+      {/* Click outside to close export menu */}
+      {showExportMenu && (
+        <div
+          className="fixed inset-0 z-0"
+          onClick={() => setShowExportMenu(false)}
+        />
+      )}
     </div>
   );
 }
