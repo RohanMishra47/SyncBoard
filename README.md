@@ -2,6 +2,10 @@
 
 A real-time collaborative whiteboard built with Next.js, Socket.io, and PostgreSQL.
 
+🔗 **Live Demo:** [View Project Here](https://sync-boardfrontend.vercel.app/)
+
+> **Note:** This project runs on a free/hobby backend. Initial requests may experience a short delay (cold start). Please wait a few seconds or refresh if needed.
+
 ![SyncBoard Demo](./demo.gif)
 
 ## ✨ Features
@@ -32,6 +36,28 @@ A real-time collaborative whiteboard built with Next.js, Socket.io, and PostgreS
 - **Socket.io Server**
 - **Prisma ORM**
 - **PostgreSQL** (Neon)
+
+## Screenshots
+
+### Lobby Screen
+
+![Lobby Screen](screenshots/lobby.png)
+_Login screen to enter your name._
+
+### Create/Join Room
+
+![Create/Join Room](screenshots/create_join_room.png)
+_Create a new room or join an existing one._
+
+### Whiteboard Interface
+
+![Whiteboard Interface](screenshots/whiteboard.png)
+_Real-time collaborative whiteboard with drawing tools._
+
+### Collaboration in Action
+
+![Collaboration](screenshots/collaboration.png)
+_Multiple users drawing together in real-time._
 
 ## 🚀 Getting Started
 
@@ -157,11 +183,11 @@ MIT
 
 ## 👤 Author
 
-**Your Name**
+**Rohan Mishra**
 
-- 🌐 Portfolio: [Access Website](https://yourwebsite.com)
 - 💼 LinkedIn: [Rohan Mishra](https://www.linkedin.com/in/rohan-mishra-6391bb372/)
 - 🐙 GitHub: [RohanMishra47](https://github.com/RohanMishra47)
+- 𝕏 (Twitter): [@RohanMishr19102](https://x.com/RohanMishr19102)
 - 📧 Email: mydearluffy093@gmail.com
 
 ---
