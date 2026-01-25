@@ -1,8 +1,8 @@
 import { io, Socket } from "socket.io-client";
 import { create } from "zustand";
+import { API_URL } from "../utils/api";
 
-const SOCKET_URL =
-  process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4000";
+const SOCKET_URL = API_URL;
 
 interface SocketStore {
   roomId: string | null;
