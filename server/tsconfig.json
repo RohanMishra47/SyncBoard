@@ -10,7 +10,7 @@
 
     /* 📁 Project Structure */
     "outDir": "./dist", // Compiled output
-    "rootDir": "./src", // Source files root
+    // "rootDir": "./src", // Source files root
     "baseUrl": ".", // Allows absolute imports
     "paths": {
       "@/*": ["src/*"] // Optional alias for cleaner imports
@@ -53,6 +53,6 @@
     "incremental": true, // Speeds up rebuilds
     "tsBuildInfoFile": "./.tsbuildinfo" // Cache file for incremental builds
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "prisma.config.ts"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }

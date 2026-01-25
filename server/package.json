@@ -9,7 +9,7 @@
     "type-check": "tsc --noEmit",
     "dev:safe": "pnpm type-check && tsx watch src/index.ts",
     "build": "rm -rf dist .tsbuildinfo || true && tsc && tsc-alias",
-    "start": "node dist/index.js",
+    "start": "node dist/src/index.js",
     "prisma:generate": "dotenv -e .env -- pnpm prisma generate",
     "prisma:pull": "dotenv -e .env -- pnpm prisma db pull",
     "prisma:migrate": "dotenv -e .env -- pnpm prisma migrate dev",
