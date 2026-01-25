@@ -8,7 +8,7 @@
     "dev": "tsx watch src/index.ts",
     "type-check": "tsc --noEmit",
     "dev:safe": "pnpm type-check && tsx watch src/index.ts",
-    "build": "rm -rf dist .tsbuildinfo && tsc && tsc-alias",
+    "build": "rm -rf dist .tsbuildinfo || true && echo 'Running tsc...' && tsc --listFiles && echo 'Running tsc-alias...' && tsc-alias && echo 'Build complete!' && ls -la dist",
     "start": "node dist/index.js",
     "prisma:generate": "dotenv -e .env -- pnpm prisma generate",
     "prisma:pull": "dotenv -e .env -- pnpm prisma db pull",
