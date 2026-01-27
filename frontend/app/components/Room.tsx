@@ -54,7 +54,7 @@ export default function Room({ slug }: RoomProps) {
   useKeyboardShortcuts();
   useAutoSave();
 
-  // --- LOGIC (UNCHANGED) ---
+  // --- START LOGIC ---
 
   useEffect(() => {
     setRoomId(slug);
@@ -208,37 +208,21 @@ export default function Room({ slug }: RoomProps) {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 relative">
+      <main className="flex-1 relative md:pr-16">
         {/* Canvas and Overlays */}
         <div className="h-full w-full">
           <Canvas ref={canvasRef} />
           <UserCursors />
         </div>
 
-        {/* Toolbar */}
-        {/* Note: The Toolbar component should be a flex container. It will be vertical on desktop (`flex-col`) and horizontal on mobile (`flex-row`). */}
-        <div
-          className="absolute top-1/2 left-4 -translate-y-1/2 z-10 p-2 bg-white rounded-lg shadow-lg border border-slate-200 
-                        md:flex md:flex-col md:gap-2
-                        hidden"
-        >
-          <Toolbar canvasRef={canvasRef} />
-        </div>
-        {/* Mobile Toolbar at the bottom */}
-        <div
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 p-2 bg-white rounded-lg shadow-lg border border-slate-200
-                        flex gap-2 md:hidden"
-        >
-          <Toolbar canvasRef={canvasRef} />
-        </div>
-
-        {/* Status Indicators */}
-        <div className="absolute bottom-4 right-4 z-10 flex flex-col items-end gap-2">
-          <UndoRedoIndicator />
+        <div className="absolute top-4 left-4 z-10 flex flex-col items-start gap-2">
           <SaveIndicator />
         </div>
+
+        <UndoRedoIndicator />
       </main>
+
+      <Toolbar canvasRef={canvasRef} />
     </div>
   );
 }

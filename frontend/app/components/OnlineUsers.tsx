@@ -35,17 +35,15 @@ export default function OnlineUsers() {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`
-          fixed md:static top-0 right-0 z-40 h-full
+          fixed top-0 right-0 z-40 h-full
           bg-white/80 backdrop-blur-xl
           border-l border-gray-200
-          shadow-xl md:shadow-none
+          shadow-xl
           transition-all duration-300 ease-in-out
           
-          ${isOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"}
-          ${isOpen ? "w-72" : "md:w-16"}
+          ${isOpen ? "translate-x-0 w-72" : "translate-x-full md:translate-x-0 md:w-16"}
         `}
       >
         {/* Header */}

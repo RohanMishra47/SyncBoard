@@ -97,7 +97,7 @@ export default function RoomSelect() {
       <div className="w-full max-w-3xl rounded-xl bg-white shadow-lg border border-slate-200/80 p-6 sm:p-10">
         {/* Header */}
         <div className="text-center mb-10">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight bg-linear-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent">
             SyncBoard
           </h1>
           <p className="mt-2 text-slate-500">
