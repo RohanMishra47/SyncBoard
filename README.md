@@ -6,8 +6,6 @@ A real-time collaborative whiteboard built with Next.js, Socket.io, and PostgreS
 
 > **Note:** This project runs on a free/hobby backend. Initial requests may experience a short delay (cold start). Please wait a few seconds or refresh if needed.
 
-![SyncBoard Demo](./demo.gif)
-
 ## ✨ Features
 
 - **Real-time Collaboration** - Multiple users can draw simultaneously with sub-100ms latency
